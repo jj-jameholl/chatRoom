@@ -6,6 +6,7 @@ import (
 	"element/room"
 	"encoding/json"
 	"fmt"
+	"net"
 	"strconv"
 	"sync"
 )
@@ -22,16 +23,17 @@ func (cs *CenterServer) Name() string{
 }
 
 
-func (cs *CenterServer) Handle(method string ,params map[string][]string) *config.Response {
+func (cs *CenterServer) Handle(method string ,params []string,conn net.Conn) {
 	handlers := getComandHanders()
 	var status int
 	var data string
 	if ok := handlers[method];ok{
 		switch method {
 		case "send":
-			status,data = cs.Send(params)
+			cs.Send(params)
+			return
 		case "login":
-			status,data = cs.Login(params)
+			status,data = cs.Login(params,conn)
 		case "listPlayer":
 			status,data = cs.ListPlayer()
 		}
@@ -40,24 +42,23 @@ func (cs *CenterServer) Handle(method string ,params map[string][]string) *confi
 	}
 
 	response := &config.Response{status,"success",data}
-	return response
+
+	rtn,_ := json.Marshal(response)
+	conn.Write(rtn)
 }
 
 
-func (cs *CenterServer) Send(params map[string][]string) (code int,data string) {
-	code = 200
+func (cs *CenterServer) Send(params []string) {
 	if ok := checkParams(params);ok{
-		toId := params["To"][0]
-		fromId := params["From"][0]
-		content := params["Data"][0]
+		toId := params[0]
+		fromId := params[1]
+		content := params[2]
 		if toId == "-1"{
-			SendToAll(fromId,content)
+			cs.SendToAll(fromId,content)
 		}else {
-			SendToOne(fromId,toId,content)
+			cs.SendToOne(fromId,toId,content)
 		}
 	}else{
-		code = 500
-		data = "参数不符合"
 		return
 	}
 
@@ -65,19 +66,22 @@ func (cs *CenterServer) Send(params map[string][]string) (code int,data string) 
 }
 
 
-func (cs *CenterServer) Login(params map[string][]string) (code int ,data string){
+func (cs *CenterServer) Login(params []string,conn net.Conn) (code int ,data string){
 	code = 200
+
 	if ok := checkParams(params);ok{
+
 		player := new(player.Player)
-		player.Name = params["name"][0]
-		player.Id,_ = strconv.Atoi(params["id"][0])
+		player.Name = params[0]
+		player.Id,_ = strconv.Atoi(params[1])
+		player.Conn = conn
+		fmt.Println(player)
 		if ok := cs.addPlayer(*player);!ok{
 			code = 500
 		}
 	}else{
 		code = 500
 	}
-
 
 	data = "登录成功"
 	return
@@ -100,18 +104,34 @@ func (cs *CenterServer) addPlayer(player player.Player) bool {
 }
 
 
-func SendToAll(fromId ,content string){
-
+func (cs *CenterServer) SendToAll(fromId ,content string){
+	var msg = make([]byte,1024)
+	playerList := cs.Players
+	msg = []byte(content)
+	fromIdInt ,_ := strconv.Atoi(fromId)
+	for _,player := range playerList{
+		if player.Id != fromIdInt {
+			player.Conn.Write(msg)
+		}
+	}
 }
 
 
-func SendToOne(toId ,fromId,content string) {
-
+func (cs *CenterServer) SendToOne(toId ,fromId,content string) {
+	var msg = make([]byte ,1024)
+	playerList := cs.Players
+	msg = []byte(content)
+	toIdInt ,_ := strconv.Atoi(toId)
+	for _,player := range playerList{
+		if player.Id == toIdInt{
+			player.Conn.Write(msg)
+		}
+	}
 }
 
 
 
-func checkParams(params map[string][]string) bool{
+func checkParams(params []string) bool{
 	return true
 }
 

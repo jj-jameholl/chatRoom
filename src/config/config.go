@@ -1,5 +1,7 @@
 package config
 
+import "net"
+
 type Message struct {
 	From int "from who"
 	To   int "to who"
@@ -9,7 +11,8 @@ type Message struct {
 
 type Request struct {
 	Method string "method"
-	Params string "params"
+	Params []string
+	Conn   net.Conn
 }
 
 

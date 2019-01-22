@@ -1,8 +1,10 @@
 package base
 
-import "config"
+import (
+	"net"
+)
 
 type Server interface {
-	Handle(method string ,params map[string][]string) *config.Response
+	Handle(method string ,params []string ,conn net.Conn)
 	Name() string
 }
