@@ -3,5 +3,8 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/chatRoom" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/golang/net" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/golang/protobuf" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/grpc/grpc-go" vcs="Git" />
   </component>
 </project>

@@ -1,6 +1,6 @@
 package room
 
 type Room struct {
-	Id int
+	Id   int
 	Desc string
 }

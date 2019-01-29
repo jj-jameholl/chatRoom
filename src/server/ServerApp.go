@@ -6,7 +6,7 @@ import (
 	"pattern/http"
 )
 
-func startService(server *base.CenterServer){
+func startService(server *base.CenterServer) {
 	httpServer := http.NewHttpServer(server)
 	server.ServerList["http"] = httpServer
 	httpServer.Serve()

@@ -5,6 +5,6 @@ import (
 )
 
 type Server interface {
-	Handle(method string ,params []string ,conn net.Conn)
+	Handle(method string, params []string, conn net.Conn)
 	Name() string
 }
